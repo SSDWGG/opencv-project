@@ -10,6 +10,7 @@ const emptyState = document.querySelector('#emptyState');
 const styleButtonsEl = document.querySelector('#styleButtons');
 const colorInput = document.querySelector('#hairColor');
 const opacityInput = document.querySelector('#opacity');
+const privacyToggle = document.querySelector('#privacyToggle');
 const debugToggle = document.querySelector('#debugToggle');
 
 const TASKS_VERSION = '0.10.34';
@@ -204,12 +205,14 @@ function renderLoop(now) {
       const nextPose = getHairPose(landmarks);
       smoothedPose = smoothPose(smoothedPose, nextPose);
       lastPoseTime = now;
-      setStatus(`已锁定人脸：正在预览「${currentStyle.name}」`);
+      const privacyStatus = privacyToggle.checked ? '隐私贴图开启，' : '';
+      setStatus(`已锁定人脸：${privacyStatus}正在预览「${currentStyle.name}」`);
     }
   }
 
   if (smoothedPose && now - lastPoseTime < 450) {
     const fade = Math.min(1, Math.max(0, 1 - (now - lastPoseTime - 260) / 190));
+    if (privacyToggle.checked) drawPrivacyAvatar(smoothedPose, fade);
     drawHair(smoothedPose, fade);
     if (debugToggle.checked) drawDebug(smoothedPose);
   } else {
@@ -276,6 +279,351 @@ function smoothPose(previous, next) {
     faceHeight: lerp(previous.faceHeight, next.faceHeight, alpha),
     angle: previous.angle + angleDelta * alpha
   };
+}
+
+function drawPrivacyAvatar(pose, fade) {
+  const avatarMetrics = getAvatarMetrics(pose);
+
+  context.save();
+  context.translate(pose.centerX, pose.foreheadY);
+  context.rotate(pose.angle);
+  context.scale(pose.faceWidth, pose.faceWidth);
+  context.globalAlpha = fade;
+
+  drawAvatarDropShadow(context, avatarMetrics);
+  drawAvatarEars(context, avatarMetrics);
+  drawAvatarHead(context, avatarMetrics);
+  drawAvatarMuzzle(context, avatarMetrics);
+  drawAvatarEyes(context, avatarMetrics);
+  drawAvatarNoseAndMouth(context, avatarMetrics);
+  drawAvatarWhiskers(context, avatarMetrics);
+
+  context.restore();
+}
+
+function getAvatarMetrics(pose) {
+  const faceRatio = clamp(pose.faceHeight / pose.faceWidth, 1.05, 1.52);
+  const eyeA = getEyeMetrics(pose, 33, 133, 159, 145);
+  const eyeB = getEyeMetrics(pose, 263, 362, 386, 374);
+  const [leftEye, rightEye] = sortLocalByX(eyeA, eyeB);
+  const mouthTop = getLocalPoint(pose.points[13], pose);
+  const mouthBottom = getLocalPoint(pose.points[14], pose);
+  const mouthLeft = getLocalPoint(pose.points[61], pose);
+  const mouthRight = getLocalPoint(pose.points[291], pose);
+  const nose = getLocalPoint(pose.points[1], pose) || {
+    localX: 0,
+    localY: faceRatio * 0.48
+  };
+  const mouthWidth = Math.max(localDistance(mouthLeft, mouthRight), 0.12);
+  const mouthOpen = clamp(localDistance(mouthTop, mouthBottom) / mouthWidth, 0, 0.72);
+  const mouthCenter = averageLocalPoints([mouthTop, mouthBottom, mouthLeft, mouthRight]) || {
+    localX: 0,
+    localY: faceRatio * 0.68
+  };
+  const eyeLineY = clamp(
+    (leftEye.centerY + rightEye.centerY) / 2,
+    faceRatio * 0.18,
+    faceRatio * 0.47
+  );
+
+  return {
+    faceRatio,
+    headCenterY: faceRatio * 0.47,
+    headRadiusX: 0.62,
+    headRadiusY: faceRatio * 0.58,
+    leftEye: {
+      centerX: clamp(leftEye.centerX, -0.34, -0.14),
+      centerY: eyeLineY,
+      openness: leftEye.openness
+    },
+    rightEye: {
+      centerX: clamp(rightEye.centerX, 0.14, 0.34),
+      centerY: eyeLineY,
+      openness: rightEye.openness
+    },
+    nose: {
+      centerX: clamp(nose.localX * 0.55, -0.08, 0.08),
+      centerY: clamp(nose.localY, faceRatio * 0.42, faceRatio * 0.62)
+    },
+    mouth: {
+      centerX: clamp(mouthCenter.localX * 0.45, -0.1, 0.1),
+      centerY: clamp(mouthCenter.localY, faceRatio * 0.58, faceRatio * 0.82),
+      openness: mouthOpen
+    }
+  };
+}
+
+function drawAvatarDropShadow(ctx, metrics) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
+  ctx.filter = 'blur(10px)';
+  ctx.beginPath();
+  ctx.ellipse(
+    0,
+    metrics.headCenterY + metrics.headRadiusY * 0.08,
+    metrics.headRadiusX * 0.96,
+    metrics.headRadiusY * 0.92,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawAvatarEars(ctx, metrics) {
+  const earTopY = metrics.headCenterY - metrics.headRadiusY * 0.95;
+  const earBaseY = metrics.headCenterY - metrics.headRadiusY * 0.42;
+  const earOuterColor = '#ef8f36';
+  const earInnerColor = '#ffd5c1';
+
+  ctx.save();
+  ctx.fillStyle = earOuterColor;
+  drawRoundedEar(ctx, -0.38, earBaseY, -0.52, earTopY, -0.16, earBaseY + 0.02);
+  ctx.fill();
+  drawRoundedEar(ctx, 0.38, earBaseY, 0.52, earTopY, 0.16, earBaseY + 0.02);
+  ctx.fill();
+
+  ctx.fillStyle = earInnerColor;
+  drawRoundedEar(ctx, -0.36, earBaseY - 0.02, -0.46, earTopY + 0.13, -0.22, earBaseY - 0.01);
+  ctx.fill();
+  drawRoundedEar(ctx, 0.36, earBaseY - 0.02, 0.46, earTopY + 0.13, 0.22, earBaseY - 0.01);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawRoundedEar(ctx, baseOuterX, baseOuterY, tipX, tipY, baseInnerX, baseInnerY) {
+  ctx.beginPath();
+  ctx.moveTo(baseOuterX, baseOuterY);
+  ctx.quadraticCurveTo(tipX * 0.96, tipY + 0.05, tipX, tipY);
+  ctx.quadraticCurveTo(baseInnerX * 1.04, baseInnerY - 0.1, baseInnerX, baseInnerY);
+  ctx.quadraticCurveTo((baseOuterX + baseInnerX) / 2, baseInnerY + 0.09, baseOuterX, baseOuterY);
+  ctx.closePath();
+}
+
+function drawAvatarHead(ctx, metrics) {
+  const headTop = metrics.headCenterY - metrics.headRadiusY;
+  const headBottom = metrics.headCenterY + metrics.headRadiusY;
+  const headGradient = ctx.createLinearGradient(0, headTop, 0, headBottom);
+  headGradient.addColorStop(0, '#ffb056');
+  headGradient.addColorStop(0.52, '#f58d35');
+  headGradient.addColorStop(1, '#c96525');
+
+  ctx.save();
+  ctx.fillStyle = headGradient;
+  ctx.beginPath();
+  ctx.ellipse(
+    0,
+    metrics.headCenterY,
+    metrics.headRadiusX,
+    metrics.headRadiusY,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  ctx.globalAlpha *= 0.24;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.ellipse(
+    -0.22,
+    metrics.headCenterY - metrics.headRadiusY * 0.42,
+    0.24,
+    metrics.headRadiusY * 0.22,
+    -0.25,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawAvatarMuzzle(ctx, metrics) {
+  const muzzleY = metrics.faceRatio * 0.62;
+  const cheekGradient = ctx.createRadialGradient(0, muzzleY, 0.08, 0, muzzleY, 0.42);
+  cheekGradient.addColorStop(0, '#fff8ec');
+  cheekGradient.addColorStop(1, '#ffe1bf');
+
+  ctx.save();
+  ctx.fillStyle = cheekGradient;
+  ctx.beginPath();
+  ctx.ellipse(-0.17, muzzleY, 0.28, metrics.faceRatio * 0.22, -0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(0.17, muzzleY, 0.28, metrics.faceRatio * 0.22, 0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(0, muzzleY + metrics.faceRatio * 0.06, 0.3, metrics.faceRatio * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawAvatarEyes(ctx, metrics) {
+  drawAvatarEye(ctx, metrics.leftEye.centerX, metrics.leftEye.centerY, metrics.leftEye.openness);
+  drawAvatarEye(ctx, metrics.rightEye.centerX, metrics.rightEye.centerY, metrics.rightEye.openness);
+}
+
+function drawAvatarEye(ctx, centerX, centerY, openness) {
+  ctx.save();
+  ctx.strokeStyle = '#2d1a15';
+  ctx.fillStyle = '#1b1110';
+  ctx.lineWidth = 0.018;
+  ctx.lineCap = 'round';
+
+  if (openness < 0.035) {
+    ctx.beginPath();
+    ctx.moveTo(centerX - 0.07, centerY);
+    ctx.quadraticCurveTo(centerX, centerY + 0.025, centerX + 0.07, centerY);
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, 0.06, 0.048 + openness * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
+    ctx.beginPath();
+    ctx.arc(centerX - 0.02, centerY - 0.02, 0.014, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawAvatarNoseAndMouth(ctx, metrics) {
+  const noseCenterX = metrics.nose.centerX;
+  const noseCenterY = metrics.nose.centerY;
+  const mouthCenterX = metrics.mouth.centerX;
+  const mouthCenterY = Math.max(metrics.mouth.centerY, noseCenterY + metrics.faceRatio * 0.1);
+  const mouthOpenHeight = 0.035 + metrics.mouth.openness * 0.14;
+
+  ctx.save();
+  ctx.fillStyle = '#231312';
+  ctx.beginPath();
+  ctx.moveTo(noseCenterX - 0.055, noseCenterY);
+  ctx.quadraticCurveTo(noseCenterX, noseCenterY - 0.045, noseCenterX + 0.055, noseCenterY);
+  ctx.quadraticCurveTo(noseCenterX + 0.035, noseCenterY + 0.055, noseCenterX, noseCenterY + 0.06);
+  ctx.quadraticCurveTo(noseCenterX - 0.035, noseCenterY + 0.055, noseCenterX - 0.055, noseCenterY);
+  ctx.fill();
+
+  ctx.strokeStyle = '#2c1715';
+  ctx.lineWidth = 0.018;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(noseCenterX, noseCenterY + 0.055);
+  ctx.quadraticCurveTo(noseCenterX, mouthCenterY - 0.06, mouthCenterX, mouthCenterY - 0.02);
+  ctx.stroke();
+
+  if (metrics.mouth.openness > 0.22) {
+    ctx.fillStyle = '#241111';
+    ctx.beginPath();
+    ctx.ellipse(mouthCenterX, mouthCenterY, 0.095, mouthOpenHeight, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ff8f8f';
+    ctx.beginPath();
+    ctx.ellipse(
+      mouthCenterX,
+      mouthCenterY + mouthOpenHeight * 0.34,
+      0.052,
+      mouthOpenHeight * 0.36,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(mouthCenterX, mouthCenterY - 0.03);
+    ctx.quadraticCurveTo(mouthCenterX - 0.08, mouthCenterY + 0.05, mouthCenterX - 0.16, mouthCenterY);
+    ctx.moveTo(mouthCenterX, mouthCenterY - 0.03);
+    ctx.quadraticCurveTo(mouthCenterX + 0.08, mouthCenterY + 0.05, mouthCenterX + 0.16, mouthCenterY);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawAvatarWhiskers(ctx, metrics) {
+  const whiskerY = metrics.faceRatio * 0.62;
+  const whiskerRows = [-0.05, 0.02, 0.09];
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(73, 39, 28, 0.54)';
+  ctx.lineWidth = 0.012;
+  ctx.lineCap = 'round';
+
+  for (const rowOffset of whiskerRows) {
+    ctx.beginPath();
+    ctx.moveTo(-0.12, whiskerY + rowOffset);
+    ctx.bezierCurveTo(-0.28, whiskerY + rowOffset - 0.04, -0.45, whiskerY + rowOffset - 0.03, -0.55, whiskerY + rowOffset - 0.08);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0.12, whiskerY + rowOffset);
+    ctx.bezierCurveTo(0.28, whiskerY + rowOffset - 0.04, 0.45, whiskerY + rowOffset - 0.03, 0.55, whiskerY + rowOffset - 0.08);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function getEyeMetrics(pose, outerIndex, innerIndex, upperIndex, lowerIndex) {
+  const outerPoint = getLocalPoint(pose.points[outerIndex], pose);
+  const innerPoint = getLocalPoint(pose.points[innerIndex], pose);
+  const upperPoint = getLocalPoint(pose.points[upperIndex], pose);
+  const lowerPoint = getLocalPoint(pose.points[lowerIndex], pose);
+  const fallbackCenterX = outerIndex === 33 ? -0.24 : 0.24;
+  const centerPoint = averageLocalPoints([outerPoint, innerPoint, upperPoint, lowerPoint]) || {
+    localX: fallbackCenterX,
+    localY: 0.34
+  };
+  const eyeWidth = Math.max(localDistance(outerPoint, innerPoint), 0.1);
+  const eyeHeight = localDistance(upperPoint, lowerPoint);
+  const openness = clamp((eyeHeight / eyeWidth - 0.08) * 0.34, 0.018, 0.12);
+
+  return {
+    centerX: centerPoint.localX,
+    centerY: centerPoint.localY,
+    openness
+  };
+}
+
+function getLocalPoint(point, pose) {
+  if (!point) return null;
+  const deltaX = point.x - pose.centerX;
+  const deltaY = point.y - pose.foreheadY;
+  const cosAngle = Math.cos(-pose.angle);
+  const sinAngle = Math.sin(-pose.angle);
+
+  return {
+    localX: (deltaX * cosAngle - deltaY * sinAngle) / pose.faceWidth,
+    localY: (deltaX * sinAngle + deltaY * cosAngle) / pose.faceWidth
+  };
+}
+
+function averageLocalPoints(points) {
+  const validPoints = points.filter(Boolean);
+  if (validPoints.length === 0) return null;
+  const total = validPoints.reduce(
+    (sum, point) => ({
+      localX: sum.localX + point.localX,
+      localY: sum.localY + point.localY
+    }),
+    { localX: 0, localY: 0 }
+  );
+
+  return {
+    localX: total.localX / validPoints.length,
+    localY: total.localY / validPoints.length
+  };
+}
+
+function sortLocalByX(pointA, pointB) {
+  return pointA.centerX < pointB.centerX ? [pointA, pointB] : [pointB, pointA];
+}
+
+function localDistance(pointA, pointB) {
+  if (!pointA || !pointB) return 0;
+  return Math.hypot(pointA.localX - pointB.localX, pointA.localY - pointB.localY);
 }
 
 function drawHair(pose, fade) {

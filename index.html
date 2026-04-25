@@ -47,6 +47,16 @@
             <input id="opacity" type="range" min="0.45" max="1" step="0.05" value="0.92" />
           </label>
 
+          <div class="panel-section privacy-section">
+            <label class="toggle">
+              <input id="privacyToggle" type="checkbox" checked />
+              <span>启用拟人动物隐私贴图</span>
+            </label>
+            <p class="privacy-note">
+              开启后会用跟随头部姿态、眨眼和张嘴的小狐脸覆盖真实面部内容。
+            </p>
+          </div>
+
           <label class="toggle">
             <input id="debugToggle" type="checkbox" />
             <span>显示人脸定位点</span>
@@ -57,6 +67,7 @@
             <ul>
               <li>光线越均匀，额头和脸部定位越稳定。</li>
               <li>发型会根据头部倾斜角度自动旋转和缩放。</li>
+              <li>默认开启隐私贴图，可随时关闭查看原始试戴画面。</li>
               <li>真实 PNG 会保留发丝纹理，发色只做轻微混合。</li>
               <li>当前版本是试戴合成，不会真正擦除原始头发。</li>
             </ul>
