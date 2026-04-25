@@ -31,6 +31,40 @@ npm run build
 npm run preview
 ```
 
+## 部署
+
+项目提供了一个基于 SSH + rsync 的部署脚本，会先执行生产构建，再把 `dist/` 同步到服务器目录。
+
+首次部署前先创建本地部署配置：
+
+```bash
+cp .env.deploy.example .env.deploy.local
+```
+
+然后编辑 `.env.deploy.local`：
+
+```env
+DEPLOY_SSH_HOST=你的服务器地址
+DEPLOY_SSH_USER=你的 SSH 用户
+DEPLOY_SSH_PORT=22
+DEPLOY_REMOTE_DIR=/服务器上的部署目录
+DEPLOY_SSH_KEY=~/.ssh/id_rsa
+```
+
+确认 SSH 登录可用后执行：
+
+```bash
+npm run deploy
+```
+
+如果希望每次本地 `git commit` 后自动部署，先执行一次：
+
+```bash
+npm run setup:git-hooks
+```
+
+其中 `.env.deploy.local` 已加入 `.gitignore`，不要提交真实服务器地址、用户名或私钥路径。构建时出现的 Vite chunk-size 提示只是体积警告，不代表部署失败。
+
 ## 代码结构
 
 - `src/main.js`：应用入口，只负责摄像头、模型、识别循环和模块编排。

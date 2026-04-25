@@ -8,7 +8,13 @@ const distPath = resolve('dist');
 
 function parseEnvFile(path) {
   if (!existsSync(path)) {
-    throw new Error(`Missing deploy config: ${path}`);
+    throw new Error(
+      [
+        `Missing deploy config: ${path}`,
+        'Create it with: cp .env.deploy.example .env.deploy.local',
+        'Then edit DEPLOY_SSH_HOST, DEPLOY_SSH_USER, DEPLOY_REMOTE_DIR and optional SSH settings.',
+      ].join('\n'),
+    );
   }
 
   return readFileSync(path, 'utf8')
