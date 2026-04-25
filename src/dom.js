@@ -19,6 +19,21 @@ export function getDomElements() {
     faceEmoji: document.querySelector('#faceEmoji'),
     faceExpressionName: document.querySelector('#faceExpressionName'),
     faceExpressionDetail: document.querySelector('#faceExpressionDetail'),
+    lesson: {
+      level: document.querySelector('#lessonLevel'),
+      progressLabel: document.querySelector('#lessonProgressLabel'),
+      type: document.querySelector('#lessonType'),
+      title: document.querySelector('#lessonTitle'),
+      instruction: document.querySelector('#lessonInstruction'),
+      currentStep: document.querySelector('#lessonCurrentStep'),
+      stepHint: document.querySelector('#lessonStepHint'),
+      stepList: document.querySelector('#lessonStepList'),
+      progressFill: document.querySelector('#lessonProgressFill'),
+      feedback: document.querySelector('#lessonFeedback'),
+      restartButton: document.querySelector('#restartLesson'),
+      skipButton: document.querySelector('#skipLesson'),
+      resetButton: document.querySelector('#resetLessons'),
+    },
     sideSlots: {
       Left: {
         value: document.querySelector('#leftHandValue'),

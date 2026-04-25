@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web 手指个数与收放状态检测</title>
+    <title>手语渐进学习助手</title>
   </head>
   <body>
     <div id="effectLayer" aria-hidden="true"></div>
@@ -11,9 +11,10 @@
       <section class="hero">
         <div>
           <p class="eyebrow">MediaPipe + 摄像头实时视觉检测</p>
-          <h1>手指个数与数字手势检测</h1>
+          <h1>手语渐进学习助手</h1>
           <p class="subtitle">
-            在浏览器中调用摄像头，识别手部关键点，实时判断左右手、伸出手指数，以及单手 1–10 数字手势。
+            通过浏览器摄像头识别手型与双手组合，按“词语 → 词组 → 短句 → 完整句”的顺序逐步学习，
+            一个词语练正确后自动进入下一个。
           </p>
         </div>
         <div class="hero-card" aria-live="polite">
@@ -43,8 +44,37 @@
         </div>
 
         <aside class="result-panel" aria-live="polite">
+          <section class="lesson-panel">
+            <div class="lesson-panel__top">
+              <span id="lessonLevel">入门</span>
+              <strong id="lessonProgressLabel">1/10</strong>
+            </div>
+            <div class="lesson-title-row">
+              <span id="lessonType" class="lesson-type">词语</span>
+              <h2 id="lessonTitle">我</h2>
+            </div>
+            <p id="lessonInstruction" class="lesson-instruction">
+              启动摄像头后，系统会按课程一步一步校验你的手型。
+            </p>
+            <div class="target-card">
+              <span>当前动作</span>
+              <strong id="lessonCurrentStep">等待课程加载</strong>
+              <small id="lessonStepHint">保持手型到进度条走满。</small>
+            </div>
+            <ol id="lessonStepList" class="lesson-steps"></ol>
+            <div class="lesson-progress" aria-hidden="true">
+              <span id="lessonProgressFill"></span>
+            </div>
+            <p id="lessonFeedback" class="lesson-feedback">准备开始。</p>
+            <div class="lesson-actions">
+              <button id="restartLesson" type="button">重练本课</button>
+              <button id="skipLesson" type="button">跳过</button>
+              <button id="resetLessons" type="button">清空进度</button>
+            </div>
+          </section>
+
           <div class="summary-card">
-            <span id="summaryLabel" class="label">识别数字</span>
+            <span id="summaryLabel" class="label">实时识别</span>
             <strong id="totalCount">--</strong>
             <small id="globalState">等待检测</small>
           </div>
@@ -82,11 +112,11 @@
           <div class="tips">
             <h2>使用提示</h2>
             <ul>
-              <li>双手同屏时按画面左侧 / 右侧稳定分配，减少左右跳动。</li>
-              <li>单手支持常见中文数字手势 1–10，包括 6、7、8、9、10。</li>
-              <li>支持人脸表情识别，并使用 emoji 显示当前表情。</li>
-              <li>识别到不同数字会触发不同粒子动效，数字 10 会绽放烟花。</li>
+              <li>课程使用可检测手型做渐进训练：先学词语，再组合成完整句。</li>
+              <li>每一步需要稳定保持约 1 秒，正确后会自动进入下一步或下一课。</li>
+              <li>双手动作按画面左侧 / 右侧稳定分配，减少左右跳动。</li>
               <li>伸直手指并让指尖露出画面可提高准确率。</li>
+              <li>这是学习辅助原型，不替代专业手语教师或地区标准教材。</li>
               <li>摄像头权限仅在本地浏览器中使用，不会上传视频。</li>
             </ul>
           </div>

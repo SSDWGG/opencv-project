@@ -62,7 +62,7 @@ export function renderHandResults(elements, hands) {
 function getSummary(hands) {
   if (hands.length === 0) {
     return {
-      label: '识别数字',
+      label: '实时识别',
       value: '--',
       detail: '等待检测',
     };
@@ -73,7 +73,7 @@ function getSummary(hands) {
     const value = hand.gestureNumber ?? hand.count;
 
     return {
-      label: '识别数字',
+      label: '当前手势',
       value: String(value),
       detail: `${hand.handedness} · ${
         hand.gestureNumber === null ? '按伸出手指数显示' : '单手数字手势'

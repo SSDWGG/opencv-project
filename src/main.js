@@ -1,6 +1,7 @@
 import { CAMERA_CONSTRAINTS } from './config.js';
 import { getDomElements } from './dom.js';
 import { GestureEffectController } from './gestureEffectController.js';
+import { SignTutor } from './learning/signTutor.js';
 import { clearCanvas, renderHandLandmarks, resizeCanvasToVideo } from './ui/canvasOverlay.js';
 import { renderFaceExpression } from './ui/faceResults.js';
 import { renderHandResults } from './ui/handResults.js';
@@ -12,6 +13,7 @@ import './styles.css';
 const elements = getDomElements();
 const gestureEffectController = new GestureEffectController(elements.effectLayer);
 const handSmoother = new HandSmoother();
+const signTutor = new SignTutor(elements);
 
 let visionModels;
 let visionModelsPromise;
@@ -138,6 +140,7 @@ function stopCamera() {
   elements.fpsStatus.textContent = 'FPS: --';
   handSmoother.reset();
   gestureEffectController.reset();
+  signTutor.resetFrame();
   renderHandResults(elements, []);
   renderFaceExpression(elements, getEmptyFaceExpression());
 }
@@ -172,6 +175,7 @@ function processVideoFrame() {
   });
   renderHandResults(elements, hands);
   renderFaceExpression(elements, faceExpression);
+  signTutor.update(hands, frameTime);
   gestureEffectController.update(hands);
   updateFps();
 }
