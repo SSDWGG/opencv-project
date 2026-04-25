@@ -3,97 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Web 手指个数与收放状态检测</title>
+    <title>实时发型试戴</title>
   </head>
   <body>
-    <div id="effectLayer" aria-hidden="true"></div>
-    <main class="app">
+    <div id="app">
       <section class="hero">
         <div>
-          <p class="eyebrow">MediaPipe + 摄像头实时视觉检测</p>
-          <h1>手指个数与数字手势检测</h1>
+          <p class="eyebrow">Realtime Hair Try-On</p>
+          <h1>实时摄像头发型替换</h1>
           <p class="subtitle">
-            在浏览器中调用摄像头，识别手部关键点，实时判断左右手、伸出手指数，以及单手 1–10 数字手势。
+            使用人脸关键点检测定位额头、太阳穴和头部姿态，再用真实透明 PNG 发丝素材实时合成目标发型。
           </p>
         </div>
-        <div class="hero-card" aria-live="polite">
-          <span>模型状态</span>
-          <strong id="modelStatus">等待启动</strong>
-        </div>
+        <button id="startButton" class="primary-button">开启摄像头</button>
       </section>
 
-      <section class="workspace">
-        <div class="camera-panel">
-          <div class="video-wrap">
-            <video id="webcam" autoplay playsinline muted></video>
-            <canvas id="overlay"></canvas>
-            <div id="faceOverlay" class="face-overlay" hidden>🙂</div>
-            <div id="emptyHint" class="empty-hint">
-              点击“启动摄像头”开始检测
+      <main class="workspace">
+        <section class="stage-card">
+          <div class="video-shell">
+            <video id="camera" playsinline muted></video>
+            <canvas id="stage" aria-label="实时发型预览画布"></canvas>
+            <div id="emptyState" class="empty-state">
+              <strong>准备开始试戴</strong>
+              <span>点击“开启摄像头”，正脸看向屏幕即可实时预览。</span>
             </div>
           </div>
+          <div id="status" class="status">等待摄像头授权</div>
+        </section>
 
-          <div class="controls">
-            <button id="toggleCamera" type="button" disabled>启动摄像头</button>
-            <div class="status-line">
-              <span id="cameraStatus">摄像头未启动</span>
-              <span id="fpsStatus">FPS: --</span>
-            </div>
-          </div>
-        </div>
-
-        <aside class="result-panel" aria-live="polite">
-          <div class="summary-card">
-            <span id="summaryLabel" class="label">识别数字</span>
-            <strong id="totalCount">--</strong>
-            <small id="globalState">等待检测</small>
+        <aside class="control-card">
+          <div class="panel-section">
+            <h2>选择发型</h2>
+            <div id="styleButtons" class="style-grid"></div>
           </div>
 
-          <article class="face-card">
-            <span class="label">人脸表情</span>
-            <div class="face-card__body">
-              <strong id="faceEmoji">🙂</strong>
-              <div>
-                <b id="faceExpressionName">等待检测</b>
-                <small id="faceExpressionDetail">请将人脸放入画面</small>
-              </div>
-            </div>
-          </article>
+          <label class="field">
+            <span>发色微调</span>
+            <input id="hairColor" type="color" value="#17110d" />
+          </label>
 
-          <div class="side-results">
-            <article class="side-card">
-              <span>画面左侧手</span>
-              <strong id="leftHandValue">未检测</strong>
-              <small id="leftHandDetail">--</small>
-            </article>
-            <article class="side-card">
-              <span>画面右侧手</span>
-              <strong id="rightHandValue">未检测</strong>
-              <small id="rightHandDetail">--</small>
-            </article>
-          </div>
+          <label class="field">
+            <span>覆盖强度</span>
+            <input id="opacity" type="range" min="0.45" max="1" step="0.05" value="0.92" />
+          </label>
 
-          <div id="handResults" class="hand-results">
-            <div class="placeholder">
-              请把手掌放入画面，保持光线充足，手部尽量不要遮挡。
-            </div>
-          </div>
+          <label class="toggle">
+            <input id="debugToggle" type="checkbox" />
+            <span>显示人脸定位点</span>
+          </label>
 
           <div class="tips">
-            <h2>使用提示</h2>
+            <h2>使用建议</h2>
             <ul>
-              <li>双手同屏时按画面左侧 / 右侧稳定分配，减少左右跳动。</li>
-              <li>单手支持常见中文数字手势 1–10，包括 6、7、8、9、10。</li>
-              <li>支持人脸表情识别，并使用 emoji 显示当前表情。</li>
-              <li>识别到不同数字会触发不同粒子动效，数字 10 会绽放烟花。</li>
-              <li>伸直手指并让指尖露出画面可提高准确率。</li>
-              <li>摄像头权限仅在本地浏览器中使用，不会上传视频。</li>
+              <li>光线越均匀，额头和脸部定位越稳定。</li>
+              <li>发型会根据头部倾斜角度自动旋转和缩放。</li>
+              <li>真实 PNG 会保留发丝纹理，发色只做轻微混合。</li>
+              <li>当前版本是试戴合成，不会真正擦除原始头发。</li>
             </ul>
           </div>
         </aside>
-      </section>
-    </main>
-
+      </main>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
