@@ -12,7 +12,7 @@
           <p class="eyebrow">Realtime Hair Try-On</p>
           <h1>实时摄像头发型替换</h1>
           <p class="subtitle">
-            使用人脸关键点检测定位额头、太阳穴和头部姿态，再用真实透明 PNG 发丝素材实时合成目标发型。
+            使用人脸关键点定位头部姿态，先擦除原始头发，再用 Three.js 加载 .glb 发型资产实时合成目标发型。
           </p>
         </div>
         <button id="startButton" class="primary-button">开启摄像头</button>
@@ -52,9 +52,28 @@
               <input id="privacyToggle" type="checkbox" checked />
               <span>启用拟人动物隐私贴图</span>
             </label>
+            <label class="field compact-field">
+              <span>贴图大小</span>
+              <input id="privacyScale" type="range" min="0.6" max="1.15" step="0.05" value="0.82" />
+            </label>
             <p class="privacy-note">
               开启后会用跟随头部姿态、眨眼和张嘴的小狐脸覆盖真实面部内容。
             </p>
+          </div>
+
+          <div class="panel-section render-section">
+            <label class="toggle">
+              <input id="eraseHairToggle" type="checkbox" checked />
+              <span>擦除原始头发</span>
+            </label>
+            <label class="field compact-field">
+              <span>擦除强度</span>
+              <input id="eraseHairStrength" type="range" min="0.15" max="0.75" step="0.05" value="0.45" />
+            </label>
+            <label class="toggle">
+              <input id="depthToggle" type="checkbox" checked />
+              <span>启用 3D 发束透视</span>
+            </label>
           </div>
 
           <label class="toggle">
@@ -68,8 +87,8 @@
               <li>光线越均匀，额头和脸部定位越稳定。</li>
               <li>发型会根据头部倾斜角度自动旋转和缩放。</li>
               <li>默认开启隐私贴图，可随时关闭查看原始试戴画面。</li>
-              <li>真实 PNG 会保留发丝纹理，发色只做轻微混合。</li>
-              <li>当前版本是试戴合成，不会真正擦除原始头发。</li>
+              <li>擦除原始头发和 3D 发束透视是实时近似效果，正脸最稳定。</li>
+              <li>.glb 发型模型会根据转头方向产生明暗和体积变化。</li>
             </ul>
           </div>
         </aside>

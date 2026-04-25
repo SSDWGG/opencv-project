@@ -109,7 +109,6 @@ h2 {
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.075);
   box-shadow: 0 24px 90px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(20px);
 }
 
 .stage-card {
@@ -218,11 +217,75 @@ canvas {
   background-size: 16px 16px;
 }
 
-.style-thumb img {
-  max-width: 100%;
-  max-height: 78px;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.45));
+.style-thumb--3d {
+  position: relative;
+  isolation: isolate;
+}
+
+.style-thumb--3d::before {
+  content: '3D';
+  position: absolute;
+  right: 7px;
+  bottom: 6px;
+  z-index: 2;
+  border-radius: 999px;
+  padding: 2px 6px;
+  color: #1c120d;
+  background: rgba(255, 208, 155, 0.9);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.style-thumb-model {
+  position: relative;
+  width: 58px;
+  height: 42px;
+  border-radius: 52% 52% 42% 42%;
+  background:
+    radial-gradient(circle at 30% 24%, var(--hair-highlight), transparent 23px),
+    radial-gradient(circle at 58% 38%, var(--hair-base), var(--hair-shadow) 76%);
+  box-shadow:
+    inset -10px -8px 14px rgba(0, 0, 0, 0.34),
+    inset 8px 6px 12px rgba(255, 255, 255, 0.12),
+    0 10px 18px rgba(0, 0, 0, 0.32);
+  transform: perspective(80px) rotateX(12deg) rotateY(-18deg);
+}
+
+.style-thumb-model::before,
+.style-thumb-model::after {
+  content: '';
+  position: absolute;
+  top: 22px;
+  width: 18px;
+  height: 30px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--hair-base), var(--hair-shadow));
+}
+
+.style-thumb-model::before {
+  left: 2px;
+  transform: rotate(18deg);
+}
+
+.style-thumb-model::after {
+  right: 2px;
+  transform: rotate(-18deg);
+}
+
+.style-thumb--sweep .style-thumb-model {
+  transform: perspective(80px) rotateX(12deg) rotateY(22deg) skewX(-8deg);
+}
+
+.style-thumb--bob .style-thumb-model {
+  height: 46px;
+  border-radius: 48% 48% 28% 28%;
+}
+
+.style-thumb--long .style-thumb-model::before,
+.style-thumb--long .style-thumb-model::after {
+  top: 18px;
+  height: 42px;
 }
 
 .style-copy {
@@ -273,17 +336,31 @@ canvas {
   accent-color: #ffab72;
 }
 
-.privacy-section {
+.privacy-section,
+.render-section {
   border: 1px solid rgba(255, 188, 130, 0.18);
   border-radius: 18px;
   padding: 14px;
   background: rgba(255, 188, 130, 0.08);
 }
 
+.render-section {
+  border-color: rgba(130, 181, 255, 0.18);
+  background: rgba(130, 181, 255, 0.08);
+}
+
 .privacy-note {
   margin: -2px 0 0;
   color: rgba(248, 239, 229, 0.62);
   font-size: 0.88rem;
+}
+
+.compact-field {
+  gap: 10px;
+}
+
+.compact-field input[type='range'] {
+  width: 136px;
 }
 
 .tips {
